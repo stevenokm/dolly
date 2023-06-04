@@ -34,14 +34,14 @@
 
 # COMMAND ----------
 
-!wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb -O /tmp/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb && \
-  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcublas-dev-11-3_11.5.1.109-1_amd64.deb -O /tmp/libcublas-dev-11-3_11.5.1.109-1_amd64.deb && \
-  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb -O /tmp/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb && \
-  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcurand-dev-11-3_10.2.4.109-1_amd64.deb -O /tmp/libcurand-dev-11-3_10.2.4.109-1_amd64.deb && \
-  dpkg -i /tmp/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb && \
-  dpkg -i /tmp/libcublas-dev-11-3_11.5.1.109-1_amd64.deb && \
-  dpkg -i /tmp/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb && \
-  dpkg -i /tmp/libcurand-dev-11-3_10.2.4.109-1_amd64.deb
+#!wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb -O /tmp/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb && \
+#  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcublas-dev-11-3_11.5.1.109-1_amd64.deb -O /tmp/libcublas-dev-11-3_11.5.1.109-1_amd64.deb && \
+#  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb -O /tmp/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb && \
+#  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/libcurand-dev-11-3_10.2.4.109-1_amd64.deb -O /tmp/libcurand-dev-11-3_10.2.4.109-1_amd64.deb && \
+#  dpkg -i /tmp/libcusparse-dev-11-3_11.5.0.58-1_amd64.deb && \
+#  dpkg -i /tmp/libcublas-dev-11-3_11.5.1.109-1_amd64.deb && \
+#  dpkg -i /tmp/libcusolver-dev-11-3_11.1.2.109-1_amd64.deb && \
+#  dpkg -i /tmp/libcurand-dev-11-3_10.2.4.109-1_amd64.deb
 
 # COMMAND ----------
 
@@ -86,12 +86,11 @@ from datetime import datetime
 from training.consts import DEFAULT_INPUT_MODEL, SUGGESTED_INPUT_MODELS
 from training.trainer import load_training_dataset, load_tokenizer
 
-dbutils.widgets.combobox("input_model", DEFAULT_INPUT_MODEL, SUGGESTED_INPUT_MODELS, "input_model")
-dbutils.widgets.text("num_gpus", "", "num_gpus")
-dbutils.widgets.text("local_training_root", "", "local_training_root")
-dbutils.widgets.text("dbfs_output_root", "", "dbfs_output_root")
-dbutils.widgets.text("experiment_id", "", "experiment_id")
-dbutils.widgets.combobox("gpu_family", "a100", ["v100", "a10", "a100"])
+#dbutils.widgets.combobox("input_model", DEFAULT_INPUT_MODEL, SUGGESTED_INPUT_MODELS, "input_model")
+#dbutils.widgets.text("num_gpus", "", "num_gpus")
+#dbutils.widgets.text("local_training_root", "", "local_training_root")
+#dbutils.widgets.text("dbfs_output_root", "", "dbfs_output_root")
+#dbutils.widgets.text("experiment_id", "", "experiment_id")
 
 # COMMAND ----------
 
@@ -104,8 +103,10 @@ load_tokenizer()
 timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 model_name = "dolly"
 
-experiment_id = dbutils.widgets.get("experiment_id")
-input_model = dbutils.widgets.get("input_model")
+#experiment_id = dbutils.widgets.get("experiment_id")
+experiment_id = "test_1"
+#input_model = dbutils.widgets.get("input_model")
+input_model = SUGGESTED_INPUT_MODELS
 
 if experiment_id:
     experiment_id = re.sub(r"\s+", "_", experiment_id.strip())
@@ -116,7 +117,8 @@ checkpoint_dir_name = f"{model_name}__{timestamp}"
 dolly_training_dir_name = "dolly_training"
 
 # Use the local training root path if it was provided.  Otherwise try to find a sensible default.
-local_training_root = dbutils.widgets.get("local_training_root")
+#local_training_root = dbutils.widgets.get("local_training_root")
+local_training_root = os.getcwd()
 if not local_training_root:
     # Use preferred path when working in a Databricks cluster if it exists.
     if os.path.exists("/local_disk0"):
@@ -125,7 +127,8 @@ if not local_training_root:
     else:
         local_training_root = os.path.join(os.path.expanduser('~'), dolly_training_dir_name)
 
-dbfs_output_root = dbutils.widgets.get("dbfs_output_root")
+#dbfs_output_root = dbutils.widgets.get("dbfs_output_root")
+dbfs_output_root = "./dbfs/" + dolly_training_dir_name
 if not dbfs_output_root:
     dbfs_output_root = f"/dbfs/{dolly_training_dir_name}"
 
@@ -155,7 +158,8 @@ elif gpu_family == "a100":
 
 # configure num_gpus, if specified
 num_gpus_flag = ""
-num_gpus = dbutils.widgets.get("num_gpus")
+#num_gpus = dbutils.widgets.get("num_gpus")
+num_gpus = 4
 if num_gpus:
     num_gpus = int(num_gpus)
     num_gpus_flag = f"--num_gpus={num_gpus}"
@@ -190,7 +194,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from training.generate import generate_response, load_model_tokenizer_for_generate
 
-model, tokenizer = load_model_tokenizer_for_generate(dbfs_output_dir)
+#model, tokenizer = load_model_tokenizer_for_generate(local_output_dir)
+model, tokenizer = load_model_tokenizer_for_generate("databricks/dolly-v2-12b")
 
 # COMMAND ----------
 
